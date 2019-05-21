@@ -15,13 +15,18 @@ service: notif # NOTE: update this with your service name
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-# frameworkVersion: "=X.X.X"
+# frameworkVersion: ";=X.X.X"
 
 provider:
   name: aws
   runtime: python3.7
-  profile: pythonAutomation
+  #load the config file relevant to the stage (dev/test/prod)
+  profile: ${file(../config.${self:provider.stage}.json):notif.profile}
   region: us-east-2
+  stage: dev
+  #doing that ^ and this below allows aws lambda fn's to have access to this stuff in its execution environment
+  environment:
+    SLACK_WEBHOOK_URL: ${file(../config.${self:provider.stage}.json):notif.slack_webhook_url}
 
 # you can overwrite defaults here
 #  stage: dev
@@ -57,8 +62,8 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  hello:
-    handler: handler.hello
+  post-to-slack:
+    handler: handler.post_to_slack
     events:
       - cloudwatchEvent:
           event:
