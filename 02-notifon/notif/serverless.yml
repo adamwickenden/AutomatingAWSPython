@@ -62,8 +62,8 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  post-to-slack:
-    handler: handler.post_to_slack
+  post-to-slack-launch:
+    handler: handler.post_to_slack_launch
     events:
       - cloudwatchEvent:
           event:
@@ -71,6 +71,18 @@ functions:
               - "aws.autoscaling"
             detail-type:
               - "EC2 Instance Launch Successful"
+            detail:
+              AutoScalingGroupName:
+                - "test" 
+  post-to-slack-terminate:
+    handler: handler.post_to_slack_terminate
+    events:
+      - cloudwatchEvent:
+          event:
+            source:
+              - "aws.autoscaling"
+            detail-type:
+              - "EC2 Instance Terminate Successful"
             detail:
               AutoScalingGroupName:
                 - "test"
