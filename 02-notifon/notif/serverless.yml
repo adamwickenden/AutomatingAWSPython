@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: notifon-notifier # NOTE: update this with your service name
+service: notif # NOTE: update this with your service name
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -61,14 +61,14 @@ functions:
     handler: handler.hello
     events:
       - cloudwatchEvent:
-        event:
-          detail-type:
-            - "EC2 Instance Launch Successful"
-          source:
-            - "aws.autoscaling"
-          detail:
-            AutoScalingGroupName:
-              - "notifon-example"
+          event:
+            source:
+              - "aws.autoscaling"
+            detail-type:
+              - "EC2 Instance Launch Successful"
+            detail:
+              AutoScalingGroupName:
+                - "test"
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
