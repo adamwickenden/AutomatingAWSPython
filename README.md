@@ -15,3 +15,6 @@ Create and set up bucket to host static site
 Sync a folder to an s3 bucket
 Set AWS profile with --profile=<name>
 Sync now only uploads if a file has changed and removes files from s3 if no longer in the local directory
+
+Notifon:
+Notifies a slack site when a new instance is created

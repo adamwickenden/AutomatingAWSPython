@@ -112,3 +112,6 @@ app/
 
 #slack
 *.dev.json
+
+#
+node_modules/
