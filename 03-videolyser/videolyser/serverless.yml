@@ -5,11 +5,14 @@ provider:
   runtime: python3.7
   profile: ${file(../config.${self:provider.stage}.json):videolyser.profile}
 
+  #set up the permissions of the role assigned to lambda fn's
   iamRoleStatements:
+    #allow use of all rekognition functions
     - Effect: "Allow"
       Action:
         - "rekognition:*"
       Resource: "*"
+      #allow read of s3 objects within bucket
     - Effect: "Allow"
       Action:
         - "s3:GetObject"
@@ -19,6 +22,7 @@ provider:
           - - 'arn:aws:s3:::'
             - ${file(../config.${self:provider.stage}.json):videolyser.videos_bucket}
             - '/*'
+    #allow the lambda functions to get and set roles, so we can set the role for the SNS services
     - Effect: "Allow"
       Action:
         - iam:GetRole
@@ -27,18 +31,27 @@ provider:
         Fn::GetAtt:
           - RekognitionSNSPublishRole
           - Arn
+    #permission to write to the VideosTable
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:PutItem"
+      Resource:
+        Fn::GetAtt:
+          - VideosTable
+          - Arn
 
-
+#environment variables are piced up by handler using the OS module
   environment:
+    DYNAMODB_TABLE_NAME: ${self:custom.videosTableName}
     REKOGNITION_SNS_TOPIC_ARN: ${self:custom.rekognitionSNSTopicArn}
     REKOGNITION_ROLE_ARN:
       Fn::GetAtt:
         - RekognitionSNSPublishRole
         - Arn
 
-
-
+#custom variables
 custom:
+  videosTableName: ${file(../config.${self:provider.stage}.json):videolyser.videos_table}
   rekognitionSNSTopicArn:
     Fn::Join:
       - ':'
@@ -50,6 +63,7 @@ custom:
         - 'handleLabelDetectionTopic'
 
 functions:
+  #this function is called when an mp4 object is added to s3 bucket
   startProcessingVideo:
     handler: handler.start_processing_video
     events:
@@ -58,13 +72,33 @@ functions:
           event: s3:ObjectCreated:*
           rules:
             - suffix: .mp4
+  #this function is called when SNS sends a message to say the label detection fn in rekognition is complete
   handleLabelDetection:
     handler: handler.handle_label_detection
     events:
       - sns: handleLabelDetectionTopic
 
+#can define extra resources here
 resources:
   Resources:
+    #create a dynamoDB table with a top level attribute (videoName) and a Key (also given by videoName)
+    VideosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: videoName
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: videoName
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.videosTableName}
+    #Set up role and policy that allows rekognition to use the SNS topics to kick off the handleLabelDetection fn
+    #which is invoked when the label detection is complete
     RekognitionSNSPublishRole:
       Type: AWS::IAM::Role
       Properties:
