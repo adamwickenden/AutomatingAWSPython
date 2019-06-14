@@ -1,4 +1,7 @@
-## Run pipenv shell to generate the virtual environment to run the script in
+## Run pipenv shell to generate the virtual environment to run the script in, must be run in the 01-webotron directory
+## python -m webotron.webotron (N.B. == webotron/webotron.py) runs the webotron script in the webotron directory as a module. 
+## Must call it from outside the webotron directory and indicate the path, using . instead of /, so that the "module"
+## knows where to look for other scripts, eg bucket is found at webotron.bucket
 import boto3
 
 import click
